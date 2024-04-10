@@ -15,6 +15,7 @@
 #![deny(clippy::panicking_unwrap)]
 #![deny(clippy::expect_used)]
 #![feature(error_in_core)]
+#![allow(dead_code)]
 
 extern crate alloc;
 
