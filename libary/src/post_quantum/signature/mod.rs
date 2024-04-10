@@ -8,7 +8,8 @@ use crate::shared_interfaces::Signer;
 
 mod mod_test;
 
-const SIGNATURE_ALGORITHM: Algorithm = Algorithm::Dilithium5;
+// Cyber-Dilithium was standardized as ML-DSA in FIPS 204 (https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.204.ipd.pdf)
+const SIGNATURE_ALGORITHM: Algorithm = Algorithm::MlDsa87Ipd;
 pub(crate) struct SigningKey{
     public_key: PublicKey,
     secret_key: Option<SecretKey>,
@@ -17,8 +18,6 @@ pub(crate) struct SigningKey{
 
 
 pub(crate) fn new() -> Result<SigningKey, Error> {
-    // Dilithium was standardized as FIPS 204 (https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.204.ipd.pdf)
-    // Note: This is the pre-standardization version of Dilithium
     let signalg = sig::Sig::new(SIGNATURE_ALGORITHM).map_err(Error::msg)?;
     let keypair = signalg.keypair().map_err(Error::msg)?;
     Ok(SigningKey{
@@ -29,7 +28,6 @@ pub(crate) fn new() -> Result<SigningKey, Error> {
 }
 
 pub(crate) fn new_public_key_only(public_key: &[u8]) -> Result<SigningKey, Error> {
-    // Dilithium was standarized as FIPS 204 (https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.204.ipd.pdf)
     let signalg = sig::Sig::new(SIGNATURE_ALGORITHM).map_err(Error::msg)?;
     // OQS_SIG_alg_dilithium_5 + public_key
     // Read until first null byte to get the algorithm
