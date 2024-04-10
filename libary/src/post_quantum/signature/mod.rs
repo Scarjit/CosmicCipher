@@ -75,7 +75,7 @@ impl Signer for SigningKey {
             .ok_or_else(|| Error::msg("Invalid signature"))?;
 
 
-        let validation_result = self.signature_algorithm.verify(&hash, &signature, &self.public_key);
+        let validation_result = self.signature_algorithm.verify(&hash, signature, &self.public_key);
 
         // Let's check the validation result
         match validation_result {
