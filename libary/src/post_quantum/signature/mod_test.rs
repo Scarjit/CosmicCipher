@@ -1,3 +1,13 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0 OR MIT
+ * Copyright (c) 2024 Ferdinand Linnenberg
+ *
+ * This file is part of CosmicCipher Project, which is dual-licensed under the Apache License 2.0
+ * and the MIT License. You may choose either license to govern your use of this file.
+ * See the LICENSE-APACHE.md and LICENSE-MIT.md files in the project root for more information.
+ */
+
+
 #![allow(clippy::unwrap_used)]
 #![allow(clippy::panic)]
 #![allow(clippy::panicking_unwrap)]
@@ -31,7 +41,7 @@ use crate::post_quantum::signature::new;
         let signature = keypair.sign(message).unwrap();
         assert!(keypair.verify(message, &signature).unwrap());
     }
-    
+
     #[test]
     fn export_sign_import_verify() {
         let keypair = new().unwrap();
