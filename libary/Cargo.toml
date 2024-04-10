@@ -1,0 +1,17 @@
+[package]
+name = "libary"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+sha3 = "0.10.8"
+
+[dependencies.oqs]
+version = "0.9.0"
+default-features = false
+features = ["kyber", "dilithium", "serde", "vendored"]
+
+[dependencies.anyhow]
+version = "1.0.81"
+default-features = false
