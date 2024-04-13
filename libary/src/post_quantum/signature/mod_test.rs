@@ -15,7 +15,7 @@
 
 #[cfg(test)]
 mod test {
-    use crate::post_quantum::signature::new_public_key_only;
+    use crate::post_quantum::signature::{new_from_private_key, new_from_public_key};
 use crate::post_quantum::signature::new;
     use crate::shared_interfaces::Signer;
 
@@ -26,14 +26,23 @@ use crate::post_quantum::signature::new;
     }
 
     #[test]
-    fn generate_public_key_only() {
+    fn import_public_key() {
         let keypair = new().unwrap();
         let public_key = keypair.export_public_key().unwrap();
-        let public_key_only = new_public_key_only(&public_key).unwrap();
+        let public_key_only = new_from_public_key(&public_key).unwrap();
         assert!(public_key_only.secret_key.is_none());
         assert_eq!(public_key_only.public_key, keypair.public_key);
     }
 
+    #[test]
+    fn import_private_and_public_key() {
+        let keypair = new().unwrap();
+        let private_key = keypair.export_private_key().unwrap();
+        let public_key = keypair.export_public_key().unwrap();
+        let keypair2 = new_from_private_key(&private_key, &public_key).unwrap();
+        assert_eq!(keypair.public_key, keypair2.public_key);
+    }
+    
     #[test]
     fn sign_verify() {
         let keypair = new().unwrap();
@@ -48,7 +57,8 @@ use crate::post_quantum::signature::new;
         let message = b"Hello, World!";
         let signature = keypair.sign(message).unwrap();
         let public_key = keypair.export_public_key().unwrap();
-        let public_key_only = new_public_key_only(&public_key).unwrap();
+        let public_key_only = new_from_public_key(&public_key).unwrap();
         assert!(public_key_only.verify(message, &signature).unwrap());
     }
+    
 }
