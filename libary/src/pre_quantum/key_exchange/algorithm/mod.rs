@@ -7,6 +7,14 @@
  * See the LICENSE-APACHE.md and LICENSE-MIT.md files in the project root for more information.
  */
 
-pub mod signature;
+pub enum Algorithm {
+    X25519,
+}
 
-pub mod key_exchange;
+impl Algorithm {
+    pub(crate) fn name(&self) -> &'static str {
+        match self {
+            Algorithm::X25519 => "X25519",
+        }
+    }
+}

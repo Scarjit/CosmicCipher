@@ -25,12 +25,14 @@ mod test {
     #[test]
     fn encapsulate_decapsulate() {
         let mut keypair = new().unwrap();
-        let mut keypair2 = new().unwrap();
-        let capsule = keypair
-            .encapsulate(&keypair2.export_public_key().unwrap())
-            .unwrap();
+        let keypair_public_key = keypair.export_public_key().unwrap();
 
-        let shared_secret = keypair2.decapsulate(&capsule.ciphertext).unwrap();
+        let mut keypair2 = new().unwrap();
+        let keypair2_public_key = keypair2.export_public_key().unwrap();
+
+        let capsule = keypair.encapsulate(&keypair2_public_key).unwrap();
+
+        let shared_secret = keypair2.decapsulate(&keypair_public_key).unwrap();
         assert_eq!(capsule.shared_secret, shared_secret);
 
         // TODO: Ensure that keypair and keypair2's secret keys are dropped after decapsulation
