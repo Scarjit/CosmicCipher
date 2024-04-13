@@ -69,7 +69,7 @@ impl KeyExchanger for KeyExchange {
             .public_key_from_bytes(recipient_public_key)
             .ok_or_else(|| Error::msg("Invalid public key"))?;
         let (ciphertext, shared_secret) = key_exchange_algorithm
-            .encapsulate(&rcpt_public_key)
+            .encapsulate(rcpt_public_key)
             .map_err(Error::msg)?;
         Ok(KemCapsule {
             ciphertext: ciphertext.to_owned().into_vec(),
