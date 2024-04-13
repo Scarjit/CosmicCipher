@@ -1,8 +1,0 @@
-#!/bin/sh
-# Prevents the commit if the command fails
-echo "This project wouldn't be possible without the following amazing dependencies:" > NOTICE
-echo "" >> NOTICE
-cargo license >> NOTICE
-
-# Add the NOTICE file to the commit
-git add NOTICE
