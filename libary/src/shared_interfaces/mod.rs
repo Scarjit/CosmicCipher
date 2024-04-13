@@ -10,9 +10,24 @@
 use alloc::vec::Vec;
 use anyhow::Error;
 
+// Signer is a trait for asymmetric signing
 pub trait Signer {
     fn sign(&self, message: &[u8]) -> Result<Vec<u8>, Error>;
     fn verify(&self, message: &[u8], signature: &[u8]) -> Result<bool, Error>;
     fn export_public_key(&self) -> Result<Vec<u8>, Error>;
     fn export_private_key(&self) -> Result<Vec<u8>, Error>;
+}
+
+// AsyncEncryptor is a trait for asymmetric encryption
+pub trait AsyncEncryptor {
+    fn encrypt(&self, message: &[u8]) -> Result<Vec<u8>, Error>;
+    fn decrypt(&self, message: &[u8]) -> Result<Vec<u8>, Error>;
+    fn export_public_key(&self) -> Result<Vec<u8>, Error>;
+    fn export_private_key(&self) -> Result<Vec<u8>, Error>;
+}
+
+// SyncEncryptor is a trait for symmetric encryption
+pub trait SyncEncryptor {
+    fn encrypt(&self, message: &[u8]) -> Result<Vec<u8>, Error>;
+    fn decrypt(&self, message: &[u8]) -> Result<Vec<u8>, Error>;
 }
