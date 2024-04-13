@@ -22,6 +22,14 @@ repos:
           language: rust
           types: [ rust ]
 
+        - id: clippy
+          name: cargo clippy
+          description: Runs cargo clippy
+          entry: cargo clippy --all-targets --all-features -- -D warnings
+          pass_filenames: false
+          language: rust
+          types: [ rust ]
+
         - id: update-notice
           name: update Notice file
           pass_filenames: false
