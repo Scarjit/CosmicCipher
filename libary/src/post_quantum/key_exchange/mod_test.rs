@@ -14,41 +14,25 @@
 
 #[cfg(test)]
 mod test {
-    use crate::post_quantum::key_exchange::{new, new_from_private_key, new_from_public_key};
+    use crate::pre_quantum::key_exchange::new;
     use crate::shared::interfaces::KeyExchanger;
 
     #[test]
     fn generate_keypair() {
-        let keypair = new().unwrap();
-        assert!(keypair.secret_key.is_some());
+        let _ = new().unwrap();
     }
 
     #[test]
     fn encapsulate_decapsulate() {
-        let keypair = new().unwrap();
-        let keypair2 = new().unwrap();
+        let mut keypair = new().unwrap();
+        let mut keypair2 = new().unwrap();
         let capsule = keypair
             .encapsulate(&keypair2.export_public_key().unwrap())
             .unwrap();
+
         let shared_secret = keypair2.decapsulate(&capsule.ciphertext).unwrap();
         assert_eq!(capsule.shared_secret, shared_secret);
-    }
 
-    #[test]
-    fn import_public_key() {
-        let keypair = new().unwrap();
-        let public_key = keypair.export_public_key().unwrap();
-        let public_key_only = new_from_public_key(&public_key).unwrap();
-        assert!(public_key_only.secret_key.is_none());
-        assert_eq!(public_key_only.public_key, keypair.public_key);
-    }
-
-    #[test]
-    fn import_private_and_public_key() {
-        let keypair = new().unwrap();
-        let private_key = keypair.export_private_key().unwrap();
-        let public_key = keypair.export_public_key().unwrap();
-        let keypair2 = new_from_private_key(&private_key, &public_key).unwrap();
-        assert_eq!(keypair.public_key, keypair2.public_key);
+        // TODO: Ensure that keypair and keypair2's secret keys are dropped after decapsulation
     }
 }

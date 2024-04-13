@@ -40,8 +40,8 @@ pub fn new() -> Result<SigningKey, Error> {
 }
 
 pub fn new_from_public_key(public_key: &[u8]) -> Result<SigningKey, Error> {
-    let signature_algorithm = sig::Sig::new(SIGNATURE_ALGORITHM).map_err(Error::msg)?;
     let key = validate_key_algorithm(public_key)?;
+    let signature_algorithm = sig::Sig::new(SIGNATURE_ALGORITHM).map_err(Error::msg)?;
 
     let public_key = signature_algorithm
         .public_key_from_bytes(key)

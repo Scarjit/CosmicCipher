@@ -26,10 +26,9 @@ pub struct KemCapsule {
 
 // AsyncEncryptor is a trait for asymmetric encryption
 pub trait KeyExchanger {
-    fn encapsulate(&self, recipient_public_key: &[u8]) -> Result<KemCapsule, Error>;
-    fn decapsulate(&self, cipher_text: &[u8]) -> Result<Vec<u8>, Error>;
+    fn encapsulate(&mut self, recipient_public_key: &[u8]) -> Result<KemCapsule, Error>;
+    fn decapsulate(&mut self, cipher_text: &[u8]) -> Result<Vec<u8>, Error>;
     fn export_public_key(&self) -> Result<Vec<u8>, Error>;
-    fn export_private_key(&self) -> Result<Vec<u8>, Error>;
 }
 
 // SyncEncryptor is a trait for symmetric encryption
