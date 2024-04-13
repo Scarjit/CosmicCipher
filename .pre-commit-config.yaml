@@ -29,3 +29,10 @@ repos:
           entry: echo "This project wouldn't be possible without the following amazing dependencies:\n" > NOTICE && cargo license >> NOTICE
           language: system
           types: [ text ]
+
+        - id: check-spdx
+          name: check SPDX
+          description: Check SPDX license headers
+          entry: scripts/check_copyright.sh
+          language: script
+          types: [ rust ]
