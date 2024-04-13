@@ -23,16 +23,26 @@ mod test {
     }
 
     #[test]
-    fn encapsulate_decapsulate() {
-        let mut keypair = new().unwrap();
-        let mut keypair2 = new().unwrap();
-        let capsule = keypair
-            .encapsulate(&keypair2.export_public_key().unwrap())
+    fn generate_secret() {
+        let mut keypair_1 = new().unwrap();
+        let mut keypair_2 = new().unwrap();
+
+        let keypair_public_key_1 = keypair_1.export_public_key().unwrap();
+        let keypair_public_key_2 = keypair_2.export_public_key().unwrap();
+
+        let shared_secret_1 = keypair_1
+            .generate_shared_secret(&keypair_public_key_2)
             .unwrap();
 
-        let shared_secret = keypair2.decapsulate(&capsule.ciphertext).unwrap();
-        assert_eq!(capsule.shared_secret, shared_secret);
+        let shared_secret_2 = keypair_2
+            .generate_shared_secret(&keypair_public_key_1)
+            .unwrap();
+        assert_eq!(shared_secret_1, shared_secret_2);
 
-        // TODO: Ensure that keypair and keypair2's secret keys are dropped after decapsulation
+        // Let's try to encapsulate again (this should fail)
+        let capsule = keypair_1.generate_shared_secret(&keypair_public_key_2);
+        assert!(capsule.is_err());
+        let capsule = keypair_2.generate_shared_secret(&keypair_public_key_1);
+        assert!(capsule.is_err());
     }
 }

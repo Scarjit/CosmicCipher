@@ -19,15 +19,9 @@ pub trait Signer {
     fn export_private_key(&self) -> Result<Vec<u8>, Error>;
 }
 
-pub struct KemCapsule {
-    pub(crate) ciphertext: Vec<u8>,
-    pub(crate) shared_secret: Vec<u8>,
-}
-
 // AsyncEncryptor is a trait for asymmetric encryption
 pub trait KeyExchanger {
-    fn encapsulate(&mut self, recipient_public_key: &[u8]) -> Result<KemCapsule, Error>;
-    fn decapsulate(&mut self, cipher_text: &[u8]) -> Result<Vec<u8>, Error>;
+    fn generate_shared_secret(&mut self, recipient_public_key: &[u8]) -> Result<Vec<u8>, Error>;
     fn export_public_key(&self) -> Result<Vec<u8>, Error>;
 }
 
