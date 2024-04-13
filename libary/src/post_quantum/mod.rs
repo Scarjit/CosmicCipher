@@ -7,4 +7,4 @@
  * See the LICENSE-APACHE.md and LICENSE-MIT.md files in the project root for more information.
  */
 
-pub(crate) mod signature;
+pub mod signature;

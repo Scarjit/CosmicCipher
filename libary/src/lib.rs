@@ -7,7 +7,6 @@
  * See the LICENSE-APACHE.md and LICENSE-MIT.md files in the project root for more information.
  */
 
-
 #![no_std]
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used)]
@@ -19,7 +18,6 @@
 
 extern crate alloc;
 
-pub(crate) mod pre_quantum;
-pub(crate) mod post_quantum;
-pub(crate) mod shared_interfaces;
-
+pub mod post_quantum;
+pub mod pre_quantum;
+pub mod shared_interfaces;

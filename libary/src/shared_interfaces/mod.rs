@@ -7,14 +7,12 @@
  * See the LICENSE-APACHE.md and LICENSE-MIT.md files in the project root for more information.
  */
 
-
 use alloc::vec::Vec;
 use anyhow::Error;
 
-pub(crate) trait Signer {
+pub trait Signer {
     fn sign(&self, message: &[u8]) -> Result<Vec<u8>, Error>;
-    fn verify(&self, message: &[u8], signature: &[u8]) -> Result<bool,Error>;
-    fn export_public_key(&self) -> Result<Vec<u8>,Error>;
-    
-    fn export_private_key(&self) -> Result<Vec<u8>,Error>;
+    fn verify(&self, message: &[u8], signature: &[u8]) -> Result<bool, Error>;
+    fn export_public_key(&self) -> Result<Vec<u8>, Error>;
+    fn export_private_key(&self) -> Result<Vec<u8>, Error>;
 }

@@ -5,9 +5,13 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/Scarjit/CosmicCipher"
 
+[features]
+default = ["serde"]
+serde = ["oqs/serde"]
 
 [dependencies]
 sha3 = "0.10.8"
+serde = { version = "1.0.197", features = ["derive"] }
 
 [dependencies.rand]
 version = "0.8.5"
@@ -18,8 +22,13 @@ features = ["alloc"]
 # Until https://github.com/open-quantum-safe/liboqs-rust/pull/259 is merged, we directly pull from https://github.com/Scarjit/liboqs-rust
 git = "https://github.com/Scarjit/liboqs-rust"
 default-features = false
-features = ["ml_kem", "ml_dsa", "serde", "vendored"]
+features = ["ml_kem", "ml_dsa", "vendored"]
 
 [dependencies.anyhow]
 version = "1.0.82"
 default-features = false
+
+[dev-dependencies]
+
+[dev-dependencies.serde_json]
+version = "1.0.115"
