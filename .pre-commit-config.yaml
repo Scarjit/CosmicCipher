@@ -36,3 +36,11 @@ repos:
           entry: scripts/check_copyright.sh
           language: script
           types: [ rust ]
+
+        - id: sign-off
+          name: Sign off commits
+          description: Add sign-off to commits
+          entry: scripts/add_signoff.sh
+          language: script
+          stages:
+            - prepare-commit-msg
