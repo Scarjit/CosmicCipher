@@ -23,6 +23,11 @@ jobs:
           targets: ${{ matrix.target }}
           components: rustfmt, clippy
 
+      - name: Install build-essential
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install build-essential
+
       - uses: mymindstorm/setup-emsdk@v14
         if: matrix.target == 'wasm32-unknown-emscripten'
 
