@@ -7,7 +7,6 @@
  * See the LICENSE-APACHE.md and LICENSE-MIT.md files in the project root for more information.
  */
 
-use alloc::borrow::ToOwned;
 use alloc::string::String;
 use alloc::vec::Vec;
 
@@ -15,6 +14,7 @@ use anyhow::Error;
 use ed25519_dalek::{Verifier, VerifyingKey};
 use rand::rngs::SmallRng;
 use rand::{RngCore, SeedableRng};
+#[cfg(feature = "serde")]
 use serde::ser::SerializeStruct;
 use sha3::Digest;
 

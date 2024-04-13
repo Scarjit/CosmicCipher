@@ -13,6 +13,7 @@ use alloc::vec::Vec;
 use anyhow::Error;
 use oqs::sig;
 use oqs::sig::{Algorithm, PublicKey, SecretKey};
+#[cfg(feature = "serde")]
 use serde::ser::SerializeStruct;
 use sha3::Digest;
 

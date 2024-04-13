@@ -8,6 +8,7 @@
  */
 
 use alloc::vec::Vec;
+
 use anyhow::Error;
 
 // Signer is a trait for asymmetric signing
@@ -18,16 +19,21 @@ pub trait Signer {
     fn export_private_key(&self) -> Result<Vec<u8>, Error>;
 }
 
+pub struct KemCapsule {
+    pub(crate) ciphertext: Vec<u8>,
+    pub(crate) shared_secret: Vec<u8>,
+}
+
 // AsyncEncryptor is a trait for asymmetric encryption
-pub trait AsyncEncryptor {
-    fn encrypt(&self, message: &[u8]) -> Result<Vec<u8>, Error>;
-    fn decrypt(&self, message: &[u8]) -> Result<Vec<u8>, Error>;
+pub trait KeyExchanger {
+    fn encapsulate(&self, recipient_public_key: &[u8]) -> Result<KemCapsule, Error>;
+    fn decapsulate(&self, cipher_text: &[u8]) -> Result<Vec<u8>, Error>;
     fn export_public_key(&self) -> Result<Vec<u8>, Error>;
     fn export_private_key(&self) -> Result<Vec<u8>, Error>;
 }
 
 // SyncEncryptor is a trait for symmetric encryption
-pub trait SyncEncryptor {
+pub trait SymmetricEncryptor {
     fn encrypt(&self, message: &[u8]) -> Result<Vec<u8>, Error>;
     fn decrypt(&self, message: &[u8]) -> Result<Vec<u8>, Error>;
 }
