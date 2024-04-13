@@ -84,7 +84,12 @@ impl Signer for SigningKey {
 
         // Sign the hash
         use ed25519_dalek::ed25519::signature::Signer;
-        let signature = ed25519_dalek::SigningKey::sign(self.secret_key.as_ref().unwrap(), &hash);
+        let signature = ed25519_dalek::SigningKey::sign(
+            self.secret_key
+                .as_ref()
+                .ok_or_else(|| Error::msg("No secret key"))?,
+            &hash,
+        );
         Ok(signature.to_bytes().to_vec())
     }
 
@@ -145,7 +150,7 @@ impl serde::Serialize for SigningKey {
         state.end()
     }
 }
-const FIELDS: &'static [&'static str] = &["public_key", "secret_key"];
+const FIELDS: &[&str] = &["public_key", "secret_key"];
 
 #[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for SigningKey {
