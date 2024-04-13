@@ -1,0 +1,22 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.3.0
+    hooks:
+        - id: check-byte-order-marker
+        - id: check-case-conflict
+        - id: check-merge-conflict
+        - id: check-symlinks
+        - id: check-yaml
+        - id: end-of-file-fixer
+        - id: mixed-line-ending
+        - id: trailing-whitespace
+-   repo: local
+    hooks:
+        - id: fmt
+          name: rustfmt
+          description: Runs rustfmt
+          entry: rustfmt
+          language: rust
+          types: [ rust ]
