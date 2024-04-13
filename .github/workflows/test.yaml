@@ -24,6 +24,7 @@ jobs:
           components: rustfmt, clippy
 
       - name: Install build-essential
+        if: matrix.target == 'wasm32-unknown-emscripten'
         run: |
           sudo apt-get -y update
           sudo apt-get -y install build-essential gcc-multilib
