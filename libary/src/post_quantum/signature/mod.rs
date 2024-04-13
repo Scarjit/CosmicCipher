@@ -8,6 +8,7 @@
  */
 
 
+use alloc::borrow::ToOwned;
 use alloc::vec::Vec;
 use anyhow::Error;
 use oqs::sig;
@@ -37,7 +38,7 @@ pub(crate) fn new() -> Result<SigningKey, Error> {
     })
 }
 
-pub(crate) fn new_public_key_only(public_key: &[u8]) -> Result<SigningKey, Error> {
+pub(crate) fn new_from_public_key(public_key: &[u8]) -> Result<SigningKey, Error> {
     let signalg = sig::Sig::new(SIGNATURE_ALGORITHM).map_err(Error::msg)?;
     // OQS_SIG_alg_dilithium_5 + public_key
     // Read until first null byte to get the algorithm
@@ -55,6 +56,31 @@ pub(crate) fn new_public_key_only(public_key: &[u8]) -> Result<SigningKey, Error
         signature_algorithm: signalg,
     })
 }
+
+pub(crate) fn new_from_private_key(private_key: &[u8], public_key: &[u8]) -> Result<SigningKey, Error> {
+    let signalg = sig::Sig::new(SIGNATURE_ALGORITHM).map_err(Error::msg)?;
+    let secret_key = signalg.secret_key_from_bytes(private_key)
+        .ok_or_else(|| Error::msg("Invalid private key"))?;
+    let public_key = signalg.public_key_from_bytes(public_key)
+        .ok_or_else(|| Error::msg("Invalid public key"))?;
+    
+    let sk = SigningKey{
+        public_key: public_key.to_owned(),
+        secret_key: Some(secret_key.to_owned()),
+        signature_algorithm: signalg,
+    };
+
+    // Validate that public key belongs to the private key by generating and validating a signature
+    let message = b"Hello, World!";
+    let signature = sk.sign(message)?;
+    if !sk.verify(message, &signature)? {
+        return Err(Error::msg("Public key does not belong to private key"));
+    }
+
+    Ok(sk)
+}
+
+
 impl Signer for SigningKey {
     fn sign(&self, message: &[u8]) -> Result<Vec<u8>, Error> {
         // Generate a hash of the message to sign using SHA-3 512
@@ -97,6 +123,12 @@ impl Signer for SigningKey {
         public_key.extend_from_slice(SIGNATURE_ALGORITHM.name().as_bytes());
         public_key.extend_from_slice(self.public_key.as_ref());
         Ok(public_key)
+    }
+    
+    fn export_private_key(&self) -> Result<Vec<u8>,Error> {
+        let secret_key = self.secret_key.as_ref().ok_or_else(|| Error::msg("No secret key"))?;
+        let sk_data = secret_key.to_owned().into_vec();
+        Ok(sk_data)
     }
 
 }
