@@ -14,9 +14,9 @@
 
 #[cfg(test)]
 mod test {
-    use crate::post_quantum::signature::{new, SigningKey};
-    use crate::post_quantum::signature::{new_from_private_key, new_from_public_key};
-    use crate::shared_interfaces::Signer;
+    use crate::pre_quantum::signature::{new, SigningKey};
+    use crate::pre_quantum::signature::{new_from_private_key, new_from_public_key};
+    use crate::shared::interfaces::Signer;
 
     #[test]
     fn generate_keypair() {
@@ -66,9 +66,7 @@ mod test {
         let keypair = new().unwrap();
         // Use JSON for serialization
         let serialized = serde_json::to_string(&keypair).unwrap();
-        std::println!("{}", serialized);
-        std::println!("PKey length: {}", keypair.public_key.len());
-        std::println!("SKey length: {}", keypair.secret_key.unwrap().len());
+        std::println!("Serialized: {}", serialized);
         let deserialized: SigningKey = serde_json::from_str(&serialized).unwrap();
         assert_eq!(keypair.public_key, deserialized.public_key);
     }

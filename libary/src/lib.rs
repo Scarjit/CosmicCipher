@@ -20,4 +20,4 @@ extern crate alloc;
 
 pub mod post_quantum;
 pub mod pre_quantum;
-pub mod shared_interfaces;
+pub mod shared;
