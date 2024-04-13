@@ -7,7 +7,6 @@
  * See the LICENSE-APACHE.md and LICENSE-MIT.md files in the project root for more information.
  */
 
-
 #![allow(clippy::unwrap_used)]
 #![allow(clippy::panic)]
 #![allow(clippy::panicking_unwrap)]
@@ -15,8 +14,8 @@
 
 #[cfg(test)]
 mod test {
+    use crate::post_quantum::signature::{new, SigningKey};
     use crate::post_quantum::signature::{new_from_private_key, new_from_public_key};
-use crate::post_quantum::signature::new;
     use crate::shared_interfaces::Signer;
 
     #[test]
@@ -42,7 +41,7 @@ use crate::post_quantum::signature::new;
         let keypair2 = new_from_private_key(&private_key, &public_key).unwrap();
         assert_eq!(keypair.public_key, keypair2.public_key);
     }
-    
+
     #[test]
     fn sign_verify() {
         let keypair = new().unwrap();
@@ -60,5 +59,17 @@ use crate::post_quantum::signature::new;
         let public_key_only = new_from_public_key(&public_key).unwrap();
         assert!(public_key_only.verify(message, &signature).unwrap());
     }
-    
+
+    #[test]
+    fn serialize_deserialize() {
+        extern crate std;
+        let keypair = new().unwrap();
+        // Use JSON for serialization
+        let serialized = serde_json::to_string(&keypair).unwrap();
+        std::println!("{}", serialized);
+        std::println!("PKey length: {}", keypair.public_key.len());
+        std::println!("SKey length: {}", keypair.secret_key.unwrap().len());
+        let deserialized: SigningKey = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(keypair.public_key, deserialized.public_key);
+    }
 }
