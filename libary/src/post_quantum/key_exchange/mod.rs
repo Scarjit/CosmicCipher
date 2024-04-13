@@ -15,14 +15,14 @@ use oqs::kem;
 use oqs::kem::{Kem, PublicKey, SecretKey};
 
 use crate::shared::helpers::validate_key_algorithm;
-use crate::shared::interfaces::{KemCapsule, KeyExchanger};
+use crate::shared::interfaces::KeyExchanger;
 
 mod mod_test;
 
 const KEM_ALGORITHM: kem::Algorithm = kem::Algorithm::ClassicMcEliece8192128f;
 pub struct KeyExchange {
     public_key: PublicKey,
-    secret_key: SecretKey,
+    secret_key: Option<SecretKey>,
     key_exchange_algorithm: Kem,
 }
 
@@ -31,37 +31,22 @@ pub fn new() -> Result<KeyExchange, Error> {
     let keypair = key_exchange_algorithm.keypair().map_err(Error::msg)?;
     Ok(KeyExchange {
         public_key: keypair.0,
-        secret_key: keypair.1,
+        secret_key: Some(keypair.1),
         key_exchange_algorithm,
     })
 }
 
 impl KeyExchanger for KeyExchange {
-    fn encapsulate(&mut self, recipient_public_key: &[u8]) -> Result<KemCapsule, Error> {
-        let validated_private_key = validate_key_algorithm(recipient_public_key)?;
+    fn generate_shared_secret(&mut self, recipient_public_key: &[u8]) -> Result<Vec<u8>, Error> {
+        let validated_private_key =
+            validate_key_algorithm(recipient_public_key, KEM_ALGORITHM.name())?;
         let key_exchange_algorithm = Kem::new(KEM_ALGORITHM).map_err(Error::msg)?;
         let rcpt_public_key = key_exchange_algorithm
-            .public_key_from_bytes(validated_private_key)
+            .public_key_from_bytes(&validated_private_key)
             .ok_or_else(|| Error::msg("Invalid public key"))?;
-        let (ciphertext, shared_secret) = key_exchange_algorithm
+        let (_, shared_secret) = key_exchange_algorithm
             .encapsulate(rcpt_public_key)
             .map_err(Error::msg)?;
-        // TODO: Drop the secret key after decapsulation, to prevent it from being used again
-        Ok(KemCapsule {
-            ciphertext: ciphertext.to_owned().into_vec(),
-            shared_secret: shared_secret.to_owned().into_vec(),
-        })
-    }
-
-    fn decapsulate(&mut self, cipher_text: &[u8]) -> Result<Vec<u8>, Error> {
-        let key_exchange_algorithm = Kem::new(KEM_ALGORITHM).map_err(Error::msg)?;
-        let ciphertext = key_exchange_algorithm
-            .ciphertext_from_bytes(cipher_text)
-            .ok_or_else(|| Error::msg("Invalid cipher text"))?;
-        let shared_secret = key_exchange_algorithm
-            .decapsulate(&self.secret_key, ciphertext)
-            .map_err(Error::msg)?;
-        // TODO: Drop the secret key after decapsulation, to prevent it from being used again
         Ok(shared_secret.to_owned().into_vec())
     }
 

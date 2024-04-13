@@ -7,22 +7,15 @@
  * See the LICENSE-APACHE.md and LICENSE-MIT.md files in the project root for more information.
  */
 
+use alloc::vec::Vec;
 use anyhow::Error;
 
-pub(crate) fn validate_key_algorithm(key: &[u8]) -> Result<&[u8], Error> {
+pub(crate) fn validate_key_algorithm(key: &[u8], expected: &str) -> Result<Vec<u8>, Error> {
     // SIGNATURE_ALGORITHM + key
     // Read until first null byte to get the algorithm
-    let (alg, key) = key.split_at(
-        crate::pre_quantum::signature::SIGNATURE_ALGORITHM
-            .name()
-            .len(),
-    );
-    if alg
-        != crate::pre_quantum::signature::SIGNATURE_ALGORITHM
-            .name()
-            .as_bytes()
-    {
+    let (alg, key) = key.split_at(expected.len());
+    if alg != expected.as_bytes() {
         return Err(Error::msg("Invalid algorithm"));
     }
-    Ok(key)
+    Ok(key.to_vec())
 }

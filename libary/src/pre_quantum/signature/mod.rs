@@ -47,9 +47,10 @@ pub fn new() -> Result<SigningKey, Error> {
 }
 
 pub fn new_from_public_key(public_key: &[u8]) -> Result<SigningKey, Error> {
-    let key = validate_key_algorithm(public_key)?;
-    let public_key = VerifyingKey::from_bytes(<&[u8; 32]>::try_from(key).map_err(Error::msg)?)
-        .map_err(Error::msg)?;
+    let key = validate_key_algorithm(public_key, SIGNATURE_ALGORITHM.name())?;
+    let public_key =
+        VerifyingKey::from_bytes(<&[u8; 32]>::try_from(key.as_slice()).map_err(Error::msg)?)
+            .map_err(Error::msg)?;
     Ok(SigningKey {
         public_key,
         secret_key: None,
@@ -57,17 +58,19 @@ pub fn new_from_public_key(public_key: &[u8]) -> Result<SigningKey, Error> {
 }
 
 pub fn new_from_private_key(private_key: &[u8], public_key: &[u8]) -> Result<SigningKey, Error> {
-    let validated_private_key = validate_key_algorithm(private_key)?;
+    let validated_private_key = validate_key_algorithm(private_key, SIGNATURE_ALGORITHM.name())?;
 
     let keypair = ed25519_dalek::SigningKey::from_bytes(
-        <&ed25519_dalek::SecretKey>::try_from(validated_private_key).map_err(Error::msg)?,
+        <&ed25519_dalek::SecretKey>::try_from(validated_private_key.as_slice())
+            .map_err(Error::msg)?,
     );
     let public_key_from_keypair = keypair.verifying_key();
 
-    let validated_public_key = validate_key_algorithm(public_key)?;
-    let public_key_imported =
-        VerifyingKey::from_bytes(<&[u8; 32]>::try_from(validated_public_key).map_err(Error::msg)?)
-            .map_err(Error::msg)?;
+    let validated_public_key = validate_key_algorithm(public_key, SIGNATURE_ALGORITHM.name())?;
+    let public_key_imported = VerifyingKey::from_bytes(
+        <&[u8; 32]>::try_from(validated_public_key.as_slice()).map_err(Error::msg)?,
+    )
+    .map_err(Error::msg)?;
     if !public_key_imported.eq(&public_key_from_keypair) {
         return Err(Error::msg("Public key does not belong to private key"));
     }

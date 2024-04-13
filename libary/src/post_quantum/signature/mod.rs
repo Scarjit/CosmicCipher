@@ -40,11 +40,11 @@ pub fn new() -> Result<SigningKey, Error> {
 }
 
 pub fn new_from_public_key(public_key: &[u8]) -> Result<SigningKey, Error> {
-    let key = validate_key_algorithm(public_key)?;
+    let validated_public_key = validate_key_algorithm(public_key, SIGNATURE_ALGORITHM.name())?;
     let signature_algorithm = sig::Sig::new(SIGNATURE_ALGORITHM).map_err(Error::msg)?;
 
     let public_key = signature_algorithm
-        .public_key_from_bytes(key)
+        .public_key_from_bytes(&validated_public_key)
         .ok_or_else(|| Error::msg("Invalid public key"))?;
 
     Ok(SigningKey {
@@ -57,14 +57,14 @@ pub fn new_from_public_key(public_key: &[u8]) -> Result<SigningKey, Error> {
 pub fn new_from_private_key(private_key: &[u8], public_key: &[u8]) -> Result<SigningKey, Error> {
     let signature_algorithm = sig::Sig::new(SIGNATURE_ALGORITHM).map_err(Error::msg)?;
 
-    let validated_private_key = validate_key_algorithm(public_key)?;
+    let validated_public_key = validate_key_algorithm(public_key, SIGNATURE_ALGORITHM.name())?;
     let public_key = signature_algorithm
-        .public_key_from_bytes(validated_private_key)
+        .public_key_from_bytes(&validated_public_key)
         .ok_or_else(|| Error::msg("Invalid public key"))?;
 
-    let validated_public_key = validate_key_algorithm(private_key)?;
+    let validated_private_key = validate_key_algorithm(private_key, SIGNATURE_ALGORITHM.name())?;
     let secret_key = signature_algorithm
-        .secret_key_from_bytes(validated_public_key)
+        .secret_key_from_bytes(&validated_private_key)
         .ok_or_else(|| Error::msg("Invalid secret key"))?;
 
     let sk = SigningKey {

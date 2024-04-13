@@ -7,7 +7,6 @@
  * See the LICENSE-APACHE.md and LICENSE-MIT.md files in the project root for more information.
  */
 
-use alloc::vec;
 use alloc::vec::Vec;
 
 use anyhow::Error;
@@ -15,7 +14,7 @@ use x25519_dalek::{EphemeralSecret, PublicKey};
 
 use crate::pre_quantum::key_exchange::algorithm::Algorithm;
 use crate::pre_quantum::key_exchange::algorithm::Algorithm::X25519;
-use crate::shared::interfaces::{KemCapsule, KeyExchanger};
+use crate::shared::interfaces::KeyExchanger;
 
 mod algorithm;
 mod mod_test;
@@ -33,7 +32,7 @@ pub fn new() -> Result<KeyExchange, Error> {
 }
 
 impl KeyExchanger for KeyExchange {
-    fn encapsulate(&mut self, recipient_public_key: &[u8]) -> Result<KemCapsule, Error> {
+    fn generate_shared_secret(&mut self, recipient_public_key: &[u8]) -> Result<Vec<u8>, Error> {
         let recipient_public_key =
             PublicKey::from(<[u8; 32]>::try_from(recipient_public_key).map_err(Error::msg)?);
         let ephemeral_secret = self
@@ -41,16 +40,7 @@ impl KeyExchanger for KeyExchange {
             .take()
             .ok_or_else(|| Error::msg("No secret key"))?;
         let shared = ephemeral_secret.diffie_hellman(&recipient_public_key);
-        return Ok(KemCapsule {
-            ciphertext: vec![],
-            shared_secret: shared.as_bytes().to_vec(),
-        });
-    }
-
-    // decapsulate and encapsulate are the same function in x25519
-    fn decapsulate(&mut self, recipient_public_key: &[u8]) -> Result<Vec<u8>, Error> {
-        self.encapsulate(recipient_public_key)
-            .map(|capsule| capsule.shared_secret)
+        Ok(shared.to_bytes().to_vec())
     }
 
     fn export_public_key(&self) -> Result<Vec<u8>, Error> {
