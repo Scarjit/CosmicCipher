@@ -13,10 +13,14 @@ serde = ["oqs/serde"]
 sha3 = "0.10.8"
 serde = { version = "1.0.197", features = ["derive"] }
 
+[dependencies.ed25519-dalek]
+version = "2.1.1"
+features = ["rand_core"]
+
 [dependencies.rand]
 version = "0.8.5"
 default-features = false
-features = ["alloc"]
+features = ["alloc", "small_rng", "getrandom"]
 
 [dependencies.oqs]
 # Until https://github.com/open-quantum-safe/liboqs-rust/pull/259 is merged, we directly pull from https://github.com/Scarjit/liboqs-rust

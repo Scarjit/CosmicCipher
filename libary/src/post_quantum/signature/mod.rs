@@ -7,6 +7,7 @@
  * See the LICENSE-APACHE.md and LICENSE-MIT.md files in the project root for more information.
  */
 
+use crate::shared::helpers::validate_key_algorithm;
 use alloc::string::String;
 use alloc::vec::Vec;
 use anyhow::Error;
@@ -15,7 +16,7 @@ use oqs::sig::{Algorithm, PublicKey, SecretKey};
 use serde::ser::SerializeStruct;
 use sha3::Digest;
 
-use crate::shared_interfaces::Signer;
+use crate::shared::interfaces::Signer;
 
 mod mod_test;
 
@@ -28,57 +29,47 @@ pub struct SigningKey {
 }
 
 pub fn new() -> Result<SigningKey, Error> {
-    let signalg = sig::Sig::new(SIGNATURE_ALGORITHM).map_err(Error::msg)?;
-    let keypair = signalg.keypair().map_err(Error::msg)?;
+    let signature_algorithm = sig::Sig::new(SIGNATURE_ALGORITHM).map_err(Error::msg)?;
+    let keypair = signature_algorithm.keypair().map_err(Error::msg)?;
     Ok(SigningKey {
         public_key: keypair.0,
         secret_key: Some(keypair.1),
-        signature_algorithm: signalg,
+        signature_algorithm,
     })
 }
 
-fn validate_key_algorithm(key: &[u8]) -> Result<&[u8], Error> {
-    // OQS_SIG_alg_dilithium_5 + key
-    // Read until first null byte to get the algorithm
-    let (alg, key) = key.split_at(SIGNATURE_ALGORITHM.name().len());
-    if alg != SIGNATURE_ALGORITHM.name().as_bytes() {
-        return Err(Error::msg("Invalid algorithm"));
-    }
-    Ok(key)
-}
-
 pub fn new_from_public_key(public_key: &[u8]) -> Result<SigningKey, Error> {
-    let signalg = sig::Sig::new(SIGNATURE_ALGORITHM).map_err(Error::msg)?;
+    let signature_algorithm = sig::Sig::new(SIGNATURE_ALGORITHM).map_err(Error::msg)?;
     let key = validate_key_algorithm(public_key)?;
 
-    let public_key = signalg
+    let public_key = signature_algorithm
         .public_key_from_bytes(key)
         .ok_or_else(|| Error::msg("Invalid public key"))?;
 
     Ok(SigningKey {
         public_key: public_key.to_owned(),
         secret_key: None,
-        signature_algorithm: signalg,
+        signature_algorithm,
     })
 }
 
 pub fn new_from_private_key(private_key: &[u8], public_key: &[u8]) -> Result<SigningKey, Error> {
-    let signalg = sig::Sig::new(SIGNATURE_ALGORITHM).map_err(Error::msg)?;
+    let signature_algorithm = sig::Sig::new(SIGNATURE_ALGORITHM).map_err(Error::msg)?;
 
-    let key = validate_key_algorithm(public_key)?;
-    let public_key = signalg
-        .public_key_from_bytes(key)
+    let validated_private_key = validate_key_algorithm(public_key)?;
+    let public_key = signature_algorithm
+        .public_key_from_bytes(validated_private_key)
         .ok_or_else(|| Error::msg("Invalid public key"))?;
 
-    let key = validate_key_algorithm(private_key)?;
-    let secret_key = signalg
-        .secret_key_from_bytes(key)
+    let validated_public_key = validate_key_algorithm(private_key)?;
+    let secret_key = signature_algorithm
+        .secret_key_from_bytes(validated_public_key)
         .ok_or_else(|| Error::msg("Invalid secret key"))?;
 
     let sk = SigningKey {
         public_key: public_key.to_owned(),
         secret_key: Some(secret_key.to_owned()),
-        signature_algorithm: signalg,
+        signature_algorithm,
     };
 
     // Validate that public key belongs to the private key by generating and validating a signature
@@ -136,7 +127,7 @@ impl Signer for SigningKey {
     }
 
     fn export_public_key(&self) -> Result<Vec<u8>, Error> {
-        // OQS_SIG_alg_dilithium_5 + public_key
+        // Algorithm + public_key
         let mut public_key: Vec<u8> = Vec::new();
         public_key.extend_from_slice(SIGNATURE_ALGORITHM.name().as_bytes());
         public_key.extend_from_slice(self.public_key.as_ref());

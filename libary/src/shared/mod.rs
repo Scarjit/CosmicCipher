@@ -7,17 +7,5 @@
  * See the LICENSE-APACHE.md and LICENSE-MIT.md files in the project root for more information.
  */
 
-#![no_std]
-#![forbid(unsafe_code)]
-#![deny(clippy::unwrap_used)]
-#![deny(clippy::panic)]
-#![deny(clippy::panicking_unwrap)]
-#![deny(clippy::expect_used)]
-#![feature(error_in_core)]
-#![allow(dead_code)]
-
-extern crate alloc;
-
-pub mod post_quantum;
-pub mod pre_quantum;
-pub mod shared;
+pub mod helpers;
+pub mod interfaces;
