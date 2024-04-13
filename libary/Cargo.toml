@@ -26,7 +26,7 @@ features = ["alloc", "small_rng", "getrandom"]
 # Until https://github.com/open-quantum-safe/liboqs-rust/pull/259 is merged, we directly pull from https://github.com/Scarjit/liboqs-rust
 git = "https://github.com/Scarjit/liboqs-rust"
 default-features = false
-features = ["ml_kem", "ml_dsa", "vendored"]
+features = ["classic_mceliece","ml_dsa", "vendored"]
 
 [dependencies.anyhow]
 version = "1.0.82"
