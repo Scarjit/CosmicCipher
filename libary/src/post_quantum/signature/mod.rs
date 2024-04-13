@@ -163,9 +163,13 @@ impl serde::Serialize for SigningKey {
         S: serde::Serializer,
     {
         // Serialize the public key
-        let public_key = self.export_public_key().map_err(serde::ser::Error::custom)?;
+        let public_key = self
+            .export_public_key()
+            .map_err(serde::ser::Error::custom)?;
         // Serialize the secret key
-        let secret_key = self.export_private_key().map_err(serde::ser::Error::custom)?;
+        let secret_key = self
+            .export_private_key()
+            .map_err(serde::ser::Error::custom)?;
 
         // Serialize the public key and secret key
         let mut state = serializer.serialize_struct("SigningKey", 2)?;
@@ -179,8 +183,8 @@ const FIELDS: &'static [&'static str] = &["public_key", "secret_key"];
 #[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for SigningKey {
     fn deserialize<D>(deserializer: D) -> Result<SigningKey, D::Error>
-        where
-            D: serde::Deserializer<'de>,
+    where
+        D: serde::Deserializer<'de>,
     {
         deserializer.deserialize_struct("SigningKey", FIELDS, SigningKeyVisitor)
     }
@@ -197,8 +201,8 @@ impl<'de> serde::de::Visitor<'de> for SigningKeyVisitor {
     }
 
     fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
-        where
-            A: serde::de::MapAccess<'de>,
+    where
+        A: serde::de::MapAccess<'de>,
     {
         let mut public_key: Option<Vec<u8>> = None;
         let mut secret_key: Option<Vec<u8>> = None;
@@ -206,17 +210,18 @@ impl<'de> serde::de::Visitor<'de> for SigningKeyVisitor {
             match key.as_str() {
                 "public_key" => {
                     public_key = Some(map.next_value()?);
-                },
+                }
                 "secret_key" => {
                     secret_key = Some(map.next_value()?);
-                },
+                }
                 _ => return Err(serde::de::Error::unknown_field(&key, FIELDS)),
             }
         }
         let public_key = public_key.ok_or_else(|| serde::de::Error::missing_field("public_key"))?;
         let secret_key = secret_key.ok_or_else(|| serde::de::Error::missing_field("secret_key"))?;
 
-        let keypair = new_from_private_key(&secret_key, &public_key).map_err(serde::de::Error::custom)?;
+        let keypair =
+            new_from_private_key(&secret_key, &public_key).map_err(serde::de::Error::custom)?;
         Ok(keypair)
     }
 }
