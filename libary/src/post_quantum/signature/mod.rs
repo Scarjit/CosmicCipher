@@ -170,7 +170,7 @@ impl serde::Serialize for SigningKey {
         state.end()
     }
 }
-const FIELDS: &'static [&'static str] = &["public_key", "secret_key"];
+const FIELDS: &[&str] = &["public_key", "secret_key"];
 
 #[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for SigningKey {
