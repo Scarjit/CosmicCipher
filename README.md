@@ -2,8 +2,7 @@
 
 ## Description
 
-This is an *experimental* project to create a hybrid encryption scheme for use in slow communication channels.
-It uses a combination of pre & post quantum algorithms to encrypt and decrypt messages.
+This is an experimental repo.
 
 ## Usage
 
