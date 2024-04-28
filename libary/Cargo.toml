@@ -5,41 +5,29 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/Scarjit/CosmicCipher"
 
-[features]
-default = ["serde"]
-serde = ["oqs/serde"]
 
 [dependencies]
+chacha20poly1305 = "0.10.1"
+ed25519-dalek = "2.1.1"
+x25519-dalek = "2.0.1"
 
 [dependencies.sha3]
 default-features = false
 version = "0.10.8"
 
 [dependencies.serde]
-version = "1.0.197"
+version = "1.0.198"
 default-features = false
 features = ["derive"]
-
-[dependencies.ed25519-dalek]
-version = "2.1.1"
-default-features = false
-features = ["rand_core"]
-
-[dependencies.x25519-dalek]
-version = "2.0.1"
-default-features = false
-features = ["static_secrets", "getrandom"]
 
 [dependencies.rand]
 version = "0.8.5"
 default-features = false
-features = ["alloc", "small_rng", "getrandom"]
+features = ["alloc", "getrandom"]
 
-[dependencies.oqs]
-# Until https://github.com/open-quantum-safe/liboqs-rust/pull/259 is merged, we directly pull from https://github.com/Scarjit/liboqs-rust
-git = "https://github.com/Scarjit/liboqs-rust"
+[dependencies.rand_chacha]
+version = "0.3.1"
 default-features = false
-features = ["classic_mceliece","ml_dsa", "vendored"]
 
 [dependencies.anyhow]
 version = "1.0.82"
@@ -48,4 +36,4 @@ default-features = false
 [dev-dependencies]
 
 [dev-dependencies.serde_json]
-version = "1.0.115"
+version = "1.0.116"

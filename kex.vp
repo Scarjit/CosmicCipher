@@ -1,0 +1,101 @@
+attacker [passive]
+// Obviously this schema is not secure against an active attacker (He could MITM the initial key exchange)
+// But we assume that messages are protected by TLSciphertext
+
+principal Server[
+
+]
+
+principal User[
+    // Securely generate his signing key pair
+    knows private static_signing_key_sk_user
+    static_signing_key_pk_user = G^static_signing_key_sk_user
+]
+
+User -> Server: static_signing_key_pk_user
+
+principal Instance[
+    // Securely generate his signing key pair
+    knows private static_signing_key_sk_instance
+    static_signing_key_pk_instance = G^static_signing_key_sk_instance
+]
+
+Instance -> Server: static_signing_key_pk_instance
+
+Server -> User: static_signing_key_pk_instance
+Server -> Instance: static_signing_key_pk_user
+
+// User initiates a Diffie-Hellman key exchange with the server
+// Therefore the User generates an ephemeral key pair and signs it
+
+principal User[
+    // Securely generate his ephemeral key pair
+    generates ephemeral_signing_key_sk_user
+    ephemeral_signing_key_pk_user = G^ephemeral_signing_key_sk_user
+
+    // Sign the ephemeral public key
+    ep_pk_user_sig = SIGN(static_signing_key_sk_user,ephemeral_signing_key_pk_user)
+]
+
+// Send the signed ephemeral public key to the Instance
+User -> Instance: ephemeral_signing_key_pk_user,ep_pk_user_sig
+
+// The Instance verifies the signature and generates his ephemeral key pair
+
+principal Instance[
+    // Verify the signature
+    valid_i = SIGNVERIF(static_signing_key_pk_user,ephemeral_signing_key_pk_user,ep_pk_user_sig)?
+
+    // Securely generate his ephemeral key pair
+    generates ephemeral_signing_key_sk_instance
+    ephemeral_signing_key_pk_instance = G^ephemeral_signing_key_sk_instance
+
+    // Sign the ephemeral public key
+    ep_pk_instance_sig = SIGN(static_signing_key_sk_instance,ephemeral_signing_key_pk_instance)
+
+    // Compute the shared secret
+    shared_secret_instance = ephemeral_signing_key_pk_user^ephemeral_signing_key_sk_instance
+]
+
+// Send the signed ephemeral public key to the User
+Instance -> User: ephemeral_signing_key_pk_instance,ep_pk_instance_sig
+
+// The User verifies the signature and computes the shared secret
+// The Instance verifies the signature and computes the shared secret
+
+principal User[
+    // Verify the signature
+    valid_u = SIGNVERIF(static_signing_key_pk_instance,ephemeral_signing_key_pk_instance,ep_pk_instance_sig)?
+
+    // Compute the shared secret
+    shared_secret_user = ephemeral_signing_key_pk_instance^ephemeral_signing_key_sk_user
+]
+
+// Send a message using the shared secret
+
+principal User[
+    // Encrypt the message
+    generates message
+    generates metadata // timestamp, nonce, etc.
+    ciphertext = AEAD_ENC(shared_secret_user,message,metadata)
+]
+
+User -> Instance: ciphertext, metadata
+
+principal Instance[
+    // Decrypt the message
+    message_decrypted = AEAD_DEC(shared_secret_instance,ciphertext,metadata)?
+]
+
+
+
+
+queries [
+    equivalence? shared_secret_instance, shared_secret_user
+    confidentiality? ephemeral_signing_key_sk_user
+    confidentiality? ephemeral_signing_key_sk_instance
+    confidentiality? shared_secret_instance
+    freshness? ephemeral_signing_key_pk_user
+    freshness? ephemeral_signing_key_pk_instance
+    equivalence? message, message_decrypted
+]
