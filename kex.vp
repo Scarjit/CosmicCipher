@@ -1,29 +1,46 @@
-attacker [passive]
-// Obviously this schema is not secure against an active attacker (He could MITM the initial key exchange)
-// But we assume that messages are protected by TLSciphertext
+attacker [active]
 
 principal Server[
 
 ]
 
+// The User here is both a client and CA
 principal User[
+    // Generate CA key pair
+    knows private ca_sk
+    ca_pk = G^ca_sk
+
     // Securely generate his signing key pair
     knows private static_signing_key_sk_user
     static_signing_key_pk_user = G^static_signing_key_sk_user
+
+    // Sign the static public key
+    static_signing_key_pk_user_sig = SIGN(ca_sk,static_signing_key_pk_user)
 ]
 
-User -> Server: static_signing_key_pk_user
+User -> Server: static_signing_key_pk_user, static_signing_key_pk_user_sig
 
-principal Instance[
-    // Securely generate his signing key pair
+principal User[
+    // Create new instance by generating a new key pair and signing it
     knows private static_signing_key_sk_instance
     static_signing_key_pk_instance = G^static_signing_key_sk_instance
+
+    // Sign the static public key
+    static_signing_key_pk_instance_sig = SIGN(ca_sk,static_signing_key_pk_instance)
 ]
 
-Instance -> Server: static_signing_key_pk_instance
+User -> Server: static_signing_key_pk_instance, static_signing_key_pk_instance_sig
 
-Server -> User: static_signing_key_pk_instance
-Server -> Instance: static_signing_key_pk_user
+principal Instance[
+    // This is an OTR communication
+    knows private static_signing_key_sk_instance
+]
+
+// This is an OTR communication
+User -> Instance: [ca_pk]
+
+Server -> Instance: static_signing_key_pk_user, static_signing_key_pk_user_sig
+
 
 // User initiates a Diffie-Hellman key exchange with the server
 // Therefore the User generates an ephemeral key pair and signs it
@@ -43,8 +60,11 @@ User -> Instance: ephemeral_signing_key_pk_user,ep_pk_user_sig
 // The Instance verifies the signature and generates his ephemeral key pair
 
 principal Instance[
+    // Verify the signature of the users static public key
+    valid_s_u = SIGNVERIF(ca_pk,static_signing_key_pk_user,static_signing_key_pk_user_sig)?
+
     // Verify the signature
-    valid_i = SIGNVERIF(static_signing_key_pk_user,ephemeral_signing_key_pk_user,ep_pk_user_sig)?
+    valid_e_u = SIGNVERIF(static_signing_key_pk_user,ephemeral_signing_key_pk_user,ep_pk_user_sig)?
 
     // Securely generate his ephemeral key pair
     generates ephemeral_signing_key_sk_instance
@@ -64,8 +84,10 @@ Instance -> User: ephemeral_signing_key_pk_instance,ep_pk_instance_sig
 // The Instance verifies the signature and computes the shared secret
 
 principal User[
+    // Verify the signature of the instances static public key
+    valid_s_i = SIGNVERIF(ca_pk, static_signing_key_pk_instance,static_signing_key_pk_instance_sig)?
     // Verify the signature
-    valid_u = SIGNVERIF(static_signing_key_pk_instance,ephemeral_signing_key_pk_instance,ep_pk_instance_sig)?
+    valid_e_i = SIGNVERIF(static_signing_key_pk_instance,ephemeral_signing_key_pk_instance,ep_pk_instance_sig)?
 
     // Compute the shared secret
     shared_secret_user = ephemeral_signing_key_pk_instance^ephemeral_signing_key_sk_user
@@ -78,13 +100,27 @@ principal User[
     generates message
     generates metadata // timestamp, nonce, etc.
     ciphertext = AEAD_ENC(shared_secret_user,message,metadata)
+
+    // Generate ciphertext hash and sign it
+    message_hash = HASH(message)
+
+    // Sign the hash
+    signature = SIGN(ephemeral_signing_key_sk_user,message_hash)
 ]
 
-User -> Instance: ciphertext, metadata
+User -> Instance: ciphertext, metadata, signature
 
 principal Instance[
     // Decrypt the message
     message_decrypted = AEAD_DEC(shared_secret_instance,ciphertext,metadata)?
+
+    // Verify the signature
+    // 1. Generate the hash
+    message_hash_dec = HASH(message_decrypted)
+
+    // 2. Verify the signature
+    valid_signature = SIGNVERIF(ephemeral_signing_key_pk_user,message_hash_dec,signature)?
+
 ]
 
 
@@ -95,7 +131,11 @@ queries [
     confidentiality? ephemeral_signing_key_sk_user
     confidentiality? ephemeral_signing_key_sk_instance
     confidentiality? shared_secret_instance
+    confidentiality? shared_secret_user
+    confidentiality? message
+    confidentiality? ca_sk
     freshness? ephemeral_signing_key_pk_user
     freshness? ephemeral_signing_key_pk_instance
     equivalence? message, message_decrypted
+    equivalence? message_hash, message_hash_dec
 ]

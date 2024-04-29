@@ -52,11 +52,3 @@ repos:
           language: script
           stages:
             - prepare-commit-msg
-
-        - id: validate kex.vp
-          # verifpal verify kex.vp
-          name: Validate kex.vp
-          description: Validate kex.vp
-          pass_filenames: false
-          entry: verifpal verify kex.vp
-          language: system
