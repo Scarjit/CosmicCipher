@@ -36,7 +36,7 @@ principal Instance[
     knows private static_signing_key_sk_instance
 ]
 
-// This is an OTR communication
+// This is an OTR communication, it can be public but is impossible to modify
 User -> Instance: [ca_pk]
 
 Server -> Instance: static_signing_key_pk_user, static_signing_key_pk_user_sig
@@ -102,13 +102,13 @@ principal User[
     ciphertext = AEAD_ENC(shared_secret_user,message,metadata)
 
     // Generate ciphertext hash and sign it
-    message_hash = HASH(message)
+    message_mac = MAC(shared_secret_user, message)
 
     // Sign the hash
-    signature = SIGN(ephemeral_signing_key_sk_user,message_hash)
+    signature = SIGN(ephemeral_signing_key_sk_user,message_mac)
 ]
 
-User -> Instance: ciphertext, metadata, signature
+User -> Instance: ciphertext, metadata, signature, message_mac
 
 principal Instance[
     // Decrypt the message
@@ -116,10 +116,11 @@ principal Instance[
 
     // Verify the signature
     // 1. Generate the hash
-    message_hash_dec = HASH(message_decrypted)
+    message_mac_2 = MAC(shared_secret_instance, message_decrypted)
+    _ = ASSERT(message_mac, message_mac_2)?
 
     // 2. Verify the signature
-    valid_signature = SIGNVERIF(ephemeral_signing_key_pk_user,message_hash_dec,signature)?
+    valid_signature = SIGNVERIF(ephemeral_signing_key_pk_user,message_mac_2,signature)?
 
 ]
 
@@ -133,9 +134,10 @@ queries [
     confidentiality? shared_secret_instance
     confidentiality? shared_secret_user
     confidentiality? message
+    confidentiality? message_decrypted
     confidentiality? ca_sk
     freshness? ephemeral_signing_key_pk_user
     freshness? ephemeral_signing_key_pk_instance
     equivalence? message, message_decrypted
-    equivalence? message_hash, message_hash_dec
+    equivalence? message_mac, message_mac_2
 ]
