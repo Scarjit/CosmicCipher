@@ -8,6 +8,7 @@
  */
 
 #![no_std]
+/*#![cfg_attr(not(test), no_std)]*/
 #![forbid(unsafe_code)]
 #![deny(clippy::unwrap_used)]
 #![deny(clippy::panic)]

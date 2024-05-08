@@ -61,10 +61,10 @@ User -> Instance: ephemeral_signing_key_pk_user,ep_pk_user_sig
 
 principal Instance[
     // Verify the signature of the users static public key
-    valid_s_u = SIGNVERIF(ca_pk,static_signing_key_pk_user,static_signing_key_pk_user_sig)?
+    _ = SIGNVERIF(ca_pk,static_signing_key_pk_user,static_signing_key_pk_user_sig)?
 
     // Verify the signature
-    valid_e_u = SIGNVERIF(static_signing_key_pk_user,ephemeral_signing_key_pk_user,ep_pk_user_sig)?
+    _ = SIGNVERIF(static_signing_key_pk_user,ephemeral_signing_key_pk_user,ep_pk_user_sig)?
 
     // Securely generate his ephemeral key pair
     generates ephemeral_signing_key_sk_instance
@@ -85,9 +85,9 @@ Instance -> User: ephemeral_signing_key_pk_instance,ep_pk_instance_sig
 
 principal User[
     // Verify the signature of the instances static public key
-    valid_s_i = SIGNVERIF(ca_pk, static_signing_key_pk_instance,static_signing_key_pk_instance_sig)?
+    _ = SIGNVERIF(ca_pk, static_signing_key_pk_instance,static_signing_key_pk_instance_sig)?
     // Verify the signature
-    valid_e_i = SIGNVERIF(static_signing_key_pk_instance,ephemeral_signing_key_pk_instance,ep_pk_instance_sig)?
+    _ = SIGNVERIF(static_signing_key_pk_instance,ephemeral_signing_key_pk_instance,ep_pk_instance_sig)?
 
     // Compute the shared secret
     shared_secret_user = ephemeral_signing_key_pk_instance^ephemeral_signing_key_sk_user
@@ -120,7 +120,7 @@ principal Instance[
     _ = ASSERT(message_mac, message_mac_2)?
 
     // 2. Verify the signature
-    valid_signature = SIGNVERIF(ephemeral_signing_key_pk_user,message_mac_2,signature)?
+    _ = SIGNVERIF(ephemeral_signing_key_pk_user,message_mac_2,signature)?
 
 ]
 
