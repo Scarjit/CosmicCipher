@@ -57,6 +57,9 @@ features = ["alloc"]
 [dependencies.hashbrown]
 version = "0.14.5"
 
+[dependencies.lz4_flex]
+version = "0.11.3"
+
 [dev-dependencies]
 
 [dev-dependencies.serde_json]
