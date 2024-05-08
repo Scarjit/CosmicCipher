@@ -327,6 +327,67 @@ impl Client {
 
         Ok((public_key, sig, verifying_key, signing_key_sig))
     }
+
+    pub fn encrypt_message_for_recipient(
+        &self,
+        recipient: &str,
+        message: &[u8],
+    ) -> anyhow::Result<Vec<u8>> {
+        let shared_key = match self.shared_keys.get(recipient) {
+            None => {
+                return Err(Error::msg("No shared key found"));
+            }
+            Some(v) => v,
+        };
+
+        let mut csprng = rand_chacha::ChaChaRng::from_entropy();
+        let mut nonce = [0u8; 24];
+        csprng.fill_bytes(&mut nonce);
+
+        let key = GenericArray::from_slice(shared_key);
+        let cipher = XChaCha20Poly1305::new(key);
+        let nonce = GenericArray::from_slice(&nonce);
+
+        let mut aead_data = nonce.to_vec();
+
+        let mut buffer = message.to_vec();
+
+        cipher
+            .encrypt_in_place(nonce, &aead_data, &mut buffer)
+            .map_err(Error::msg)?;
+
+        aead_data.extend_from_slice(&buffer);
+
+        Ok(aead_data)
+    }
+
+    pub fn decrypt_message_from_sender(
+        &self,
+        sender: &str,
+        data: &[u8],
+    ) -> anyhow::Result<Vec<u8>> {
+        let shared_key = match self.shared_keys.get(sender) {
+            None => {
+                return Err(Error::msg("No shared key found"));
+            }
+            Some(v) => v,
+        };
+
+        let nonce = &data[0..24];
+        let mut buffer = data[24..].to_vec();
+
+        let key = GenericArray::from_slice(shared_key);
+        let cipher = XChaCha20Poly1305::new(key);
+        let nonce = GenericArray::from_slice(nonce);
+
+        let associated_data = &data[0..24];
+
+        cipher
+            .decrypt_in_place(nonce, associated_data, &mut buffer)
+            .map_err(Error::msg)?;
+
+        Ok(buffer)
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -423,5 +484,15 @@ mod tests {
 
             assert_eq!(shared_secret1, shared_secret2);
         }
+
+        let message = b"Hello World!";
+        let encrypted = client1
+            .encrypt_message_for_recipient(rcpt2, message)
+            .unwrap();
+        let decrypted = client2
+            .decrypt_message_from_sender(rcpt1, encrypted.as_slice())
+            .unwrap();
+
+        assert_eq!(message, decrypted.as_slice());
     }
 }
