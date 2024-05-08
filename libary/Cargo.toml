@@ -7,9 +7,21 @@ repository = "https://github.com/Scarjit/CosmicCipher"
 
 
 [dependencies]
-chacha20poly1305 = "0.10.1"
-ed25519-dalek = "2.1.1"
-x25519-dalek = "2.0.1"
+
+[dependencies.chacha20poly1305]
+default-features = false
+version = "0.10.1"
+features = ["alloc", "rand_core"]
+
+[dependencies.ed25519-dalek]
+default-features = false
+version = "2.1.1"
+features = ["alloc", "rand_core", "pkcs8"]
+
+[dependencies.x25519-dalek]
+default-features = false
+version = "2.0.1"
+features = ["getrandom", "alloc", "static_secrets"]
 
 [dependencies.sha3]
 default-features = false
@@ -32,6 +44,18 @@ default-features = false
 [dependencies.anyhow]
 version = "1.0.82"
 default-features = false
+
+[dependencies.bson]
+version = "2.10.0"
+default-features = false
+
+[dependencies.argon2]
+version = "0.5.3"
+default-features = false
+features = ["alloc"]
+
+[dependencies.hashbrown]
+version = "0.14.5"
 
 [dev-dependencies]
 
