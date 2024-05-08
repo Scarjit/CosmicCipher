@@ -29,6 +29,7 @@ use chacha20poly1305::{AeadCore, AeadInPlace, KeyInit, XChaCha20Poly1305};
 use ed25519_dalek::pkcs8::{DecodePrivateKey, DecodePublicKey, EncodePrivateKey, EncodePublicKey};
 use ed25519_dalek::SecretKey;
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
+use lz4_flex::compress_prepend_size;
 use rand_chacha::rand_core::{RngCore, SeedableRng};
 use serde::{Deserialize, Serialize};
 use x25519_dalek::{PublicKey, StaticSecret};
@@ -350,7 +351,10 @@ impl Client {
 
         let mut aead_data = nonce.to_vec();
 
-        let mut buffer = message.to_vec();
+        // Compression step
+        let compressed = compress_prepend_size(message);
+
+        let mut buffer = compressed;
 
         cipher
             .encrypt_in_place(nonce, &aead_data, &mut buffer)
@@ -386,7 +390,10 @@ impl Client {
             .decrypt_in_place(nonce, associated_data, &mut buffer)
             .map_err(Error::msg)?;
 
-        Ok(buffer)
+        // Decompression step
+        let decompressed = lz4_flex::decompress_size_prepended(&buffer).map_err(Error::msg)?;
+
+        Ok(decompressed)
     }
 }
 
