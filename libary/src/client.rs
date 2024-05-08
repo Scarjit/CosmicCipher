@@ -49,6 +49,7 @@ struct Client {
 
     // Shared key map
     shared_keys: hashbrown::HashMap<String, [u8; 32]>,
+    csprng: rand_chacha::ChaChaRng,
 }
 
 impl Client {
@@ -68,10 +69,11 @@ impl Client {
             },
             kex_map: hashbrown::HashMap::new(),
             shared_keys: hashbrown::HashMap::new(),
+            csprng,
         }
     }
 
-    pub fn export_user(&self, password: &[u8]) -> anyhow::Result<Vec<u8>> {
+    pub fn export_user(&mut self, password: &[u8]) -> anyhow::Result<Vec<u8>> {
         let signing_key = self
             .signing_key
             .to_pkcs8_der()
@@ -101,9 +103,8 @@ impl Client {
 
         // Encrypt the user data with a password
         // Hash the password to expand it to a 32 byte key
-        let mut csprng = rand_chacha::ChaChaRng::from_entropy();
         let mut salt = [0u8; 16];
-        csprng.fill_bytes(&mut salt);
+        self.csprng.fill_bytes(&mut salt);
 
         let mut output_key_material = [0u8; 32];
         let argon2 = Argon2::default();
@@ -114,7 +115,7 @@ impl Client {
         // Encrypt the user data with the derived key using chacha20-poly
         let key = GenericArray::from_slice(&output_key_material);
         let cipher = XChaCha20Poly1305::new(key);
-        let nonce = XChaCha20Poly1305::generate_nonce(&mut csprng);
+        let nonce = XChaCha20Poly1305::generate_nonce(&mut self.csprng);
 
         // aead_data is salt + nonce
         let mut aead_data = salt.to_vec();
@@ -173,13 +174,13 @@ impl Client {
             },
             kex_map: hashbrown::HashMap::new(),
             shared_keys: hashbrown::HashMap::new(),
+            csprng: rand_chacha::ChaChaRng::from_entropy(),
         })
     }
 
-    pub fn generate_instance(&self) -> anyhow::Result<Vec<u8>> {
+    pub fn generate_instance(&mut self) -> anyhow::Result<Vec<u8>> {
         // An instance is a Client without the CA private key
-        let mut csprng = rand_chacha::ChaChaRng::from_entropy();
-        let signing_key = SigningKey::generate(&mut csprng);
+        let signing_key = SigningKey::generate(&mut self.csprng);
 
         let sig = match self.ca_data.secret_key {
             None => {
@@ -227,6 +228,7 @@ impl Client {
             },
             kex_map: hashbrown::HashMap::new(),
             shared_keys: hashbrown::HashMap::new(),
+            csprng: rand_chacha::ChaChaRng::from_entropy(),
         })
     }
 
@@ -330,7 +332,7 @@ impl Client {
     }
 
     pub fn encrypt_message_for_recipient(
-        &self,
+        &mut self,
         recipient: &str,
         message: &[u8],
     ) -> anyhow::Result<Vec<u8>> {
@@ -341,9 +343,8 @@ impl Client {
             Some(v) => v,
         };
 
-        let mut csprng = rand_chacha::ChaChaRng::from_entropy();
         let mut nonce = [0u8; 24];
-        csprng.fill_bytes(&mut nonce);
+        self.csprng.fill_bytes(&mut nonce);
 
         let key = GenericArray::from_slice(shared_key);
         let cipher = XChaCha20Poly1305::new(key);
@@ -438,7 +439,7 @@ mod tests {
 
     #[test]
     fn test_export_import_user() {
-        let client = Client::new_user();
+        let mut client = Client::new_user();
         let password = b"password";
         let exported = client.export_user(password).unwrap();
 
@@ -447,7 +448,7 @@ mod tests {
 
     #[test]
     fn test_export_import_instance() {
-        let client = Client::new_user();
+        let mut client = Client::new_user();
         let exported = client.generate_instance().unwrap();
 
         let _ = Client::import_instance(&exported).unwrap();
