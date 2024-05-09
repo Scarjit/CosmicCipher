@@ -34,7 +34,7 @@ repos:
           name: update Notice file
           pass_filenames: false
           description: Update notice
-          entry: echo "#Dependencies\n\nThis project wouldn't be possible without the following amazing dependencies:\n" > NOTICE.md && cargo license -j | jq -r '.[] | [.name, .version, .authors, .repository, .license, .description] | @csv' | awk -v FS=, 'BEGIN{print "| Name | Version | Authors | Repository | License | Description |"; print "|----|----|----|----|----|----|";} {for (i=1; i<=NF; i++) printf("| %s", $i); print "|"}' > NOTICE.md >> NOTICE.md
+          entry: echo "#Dependencies\n\nThis project wouldn't be possible without the following amazing dependencies:\n" > NOTICE.md && cargo license -j | jq -r '.[] | [.name, .version, .authors, .repository, .license, .description] | @csv' | awk -v FS=, 'BEGIN{print "| Name | Version | Authors | Repository | License | Description |"; print "|----|----|----|----|----|----|";} {for (i=1; i<=NF; i++) printf("| %s", $i); print "|"}' >> NOTICE.md
           language: system
           types: [ text ]
 
