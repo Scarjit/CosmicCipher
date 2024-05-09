@@ -1,0 +1,30 @@
+[package]
+name = "rest"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[dependencies.axum]
+version = "0.7.5"
+features = ["macros"]
+
+[dependencies.serde]
+version = "1.0.201"
+features = ["derive"]
+
+[dependencies.tokio]
+version = "1.37.0"
+features = ["rt", "rt-multi-thread", "macros"]
+
+[dependencies.tracing-subscriber]
+version = "0.3.18"
+
+[dependencies.libary]
+path = "../library"
+
+[dependencies.base64]
+version = "0.22.1"
+
+[dependencies.http]
+version = "1.1.0"
