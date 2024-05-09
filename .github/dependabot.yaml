@@ -2,6 +2,6 @@
 version: 2
 updates:
   - package-ecosystem: "cargo"
-    directory: "/libary"
+    directory: "/library"
     schedule:
       interval: "weekly"
