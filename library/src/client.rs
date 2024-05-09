@@ -39,7 +39,7 @@ struct CAData {
     verifying_key: VerifyingKey,
 }
 
-struct Client {
+pub struct Client {
     signing_key: ed25519_dalek::SigningKey,
     signing_key_signature: ed25519_dalek::Signature,
     ca_data: CAData,
@@ -208,11 +208,17 @@ impl Client {
 
         let serialized = bson::to_vec(&v).map_err(Error::msg)?;
 
-        Ok(serialized)
+        // Compress the instance data
+        let compressed = compress_prepend_size(&serialized);
+
+        Ok(compressed)
     }
 
     pub fn import_instance(data: &[u8]) -> anyhow::Result<Self> {
-        let v: InstanceForExport = bson::from_slice(data).map_err(Error::msg)?;
+        // Decompress the instance data
+        let uncompressed = lz4_flex::decompress_size_prepended(data).map_err(Error::msg)?;
+
+        let v: InstanceForExport = bson::from_slice(&uncompressed).map_err(Error::msg)?;
 
         let signing_key = SigningKey::from_pkcs8_der(&v.signing_key).map_err(Error::msg)?;
         let sig = ed25519_dalek::Signature::from_slice(&v.sig).map_err(Error::msg)?;

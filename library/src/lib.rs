@@ -19,4 +19,4 @@
 
 extern crate alloc;
 
-mod client;
+pub mod client;

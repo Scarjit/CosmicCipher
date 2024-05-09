@@ -7,6 +7,9 @@
  * See the LICENSE-APACHE.md and LICENSE-MIT.md files in the project root for more information.
  */
 
+mod crypto;
+#[deny(clippy::unwrap_used)]
+#[deny(clippy::expect_used)]
 mod utils;
 
 use wasm_bindgen::prelude::*;
